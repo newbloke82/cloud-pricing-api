@@ -64,6 +64,15 @@ const logger = pino({
 
 const cache = new NodeCache();
 
+let pathPrefix = process.env.PATH_PREFIX || '/';
+if (!pathPrefix.startsWith('/')) {
+  pathPrefix = `/${pathPrefix}`;
+}
+
+if (!pathPrefix.endsWith('/')) {
+  pathPrefix = `${pathPrefix}/`;
+}
+
 const config = {
   logger,
   pg,
@@ -82,6 +91,7 @@ const config = {
   infracostAPIKey: process.env.INFRACOST_API_KEY,
   selfHostedInfracostAPIKey: process.env.SELF_HOSTED_INFRACOST_API_KEY,
   cache,
+  pathPrefix,
   port: Number(process.env.PORT) || 4000,
   gcpApiKey: process.env.GCP_API_KEY,
   gcpKeyFile: generateGcpKeyFile(),

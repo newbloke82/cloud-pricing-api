@@ -29,11 +29,12 @@ interface ResponseError extends Error {
 
 async function createApp(opts: ApplicationOptions = {}): Promise<Application> {
   const app = express();
+  const router = express.Router();
 
   const logger = opts.logger || config.logger;
 
   if (!opts.disableRequestLogging) {
-    app.use(
+    router.use(
       pinoHttp({
         logger,
         customLogLevel(res, err) {
@@ -50,14 +51,14 @@ async function createApp(opts: ApplicationOptions = {}): Promise<Application> {
   }
 
   if (!opts.disableStats) {
-    app.use(express.static(path.join(__dirname, 'public')));
+    router.use(express.static(path.join(__dirname, 'public')));
     app.set('views', path.join(__dirname, 'views'));
     app.set('view engine', 'ejs');
-    app.use(home);
+    router.use(home);
   }
 
-  app.use(express.json());
-  app.use(
+  router.use(express.json());
+  router.use(
     (err: ResponseError, _req: Request, res: Response, next: NextFunction) => {
       if (err instanceof SyntaxError && err.status === 400) {
         res.status(400).send({ error: 'Bad request' });
@@ -68,7 +69,7 @@ async function createApp(opts: ApplicationOptions = {}): Promise<Application> {
   );
 
   if (!opts.disableRequestLogging) {
-    app.use((req: Request, _res: Response, next: NextFunction) => {
+    router.use((req: Request, _res: Response, next: NextFunction) => {
       if (!['/health', '/graphql'].includes(req.path)) {
         logger.debug({ body: req.body });
       }
@@ -76,15 +77,15 @@ async function createApp(opts: ApplicationOptions = {}): Promise<Application> {
     });
   }
 
-  app.use(health);
+  router.use(health);
 
   if (!opts.disableAuth) {
-    app.use(auth);
+    router.use(auth);
   }
 
   if (!opts.disableStats) {
-    app.use(events);
-    app.use(stats);
+    router.use(events);
+    router.use(stats);
   }
 
   const apolloConfig: ApolloServerExpressConfig = {
@@ -103,7 +104,9 @@ async function createApp(opts: ApplicationOptions = {}): Promise<Application> {
   const apollo = new ApolloServer(apolloConfig);
   await apollo.start();
 
-  apollo.applyMiddleware({ app });
+  apollo.applyMiddleware({ app, path: `${config.pathPrefix}/graphql` });
+
+  app.use(config.pathPrefix, router);
 
   return app;
 }
