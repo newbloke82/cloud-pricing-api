@@ -1,4 +1,6 @@
 (() => {
+  const pathPrefix = PATH_PREFIX || '/';
+
   function fillEndpoint() {
     document.getElementById('cloud-pricing-api-endpoint').innerText =
       window.location.href.replace(/\/$/, '');
@@ -18,12 +20,12 @@
         const latestVersion = data.tag_name.substr(1);
 
         let content = `
-          <p><img src="/img/check.svg" class="icon" alt="Success" /> Cloud Pricing API is using the latest version.</p>
+          <p><img src="${pathPrefix}img/check.svg" class="icon" alt="Success" /> Cloud Pricing API is using the latest version.</p>
         `;
         // eslint-disable-next-line no-underscore-dangle
         if (latestVersion !== window.__CLOUD_PRICING_API_VERSION__) {
           content = `
-          <p class="warning"><img src="/img/warning.svg" class="icon" alt="Warning" /> Cloud Pricing API is using an old version. <a href="https://www.infracost.io/cloud-pricing-api-upgrade" target="_blank">Upgrade to v${latestVersion}</a>.</p>
+          <p class="warning"><img src="${pathPrefix}img/warning.svg" class="icon" alt="Warning" /> Cloud Pricing API is using an old version. <a href="https://www.infracost.io/cloud-pricing-api-upgrade" target="_blank">Upgrade to v${latestVersion}</a>.</p>
         `;
         }
 
@@ -39,7 +41,7 @@
     const apiKey = document.getElementById('api-key-input').value;
     const priceUpdateThreshold = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-    fetch('/stats', {
+    fetch(`${pathPrefix}stats`, {
       headers: {
         'X-Api-Key': apiKey,
       },
@@ -67,15 +69,15 @@
           new Date(data.pricesLastSuccessfullyUpdatedAt).getTime() <
             new Date().getTime() - priceUpdateThreshold
         ) {
-          pricesLastUpdatedContent += ` <img src="/img/warning.svg" class="icon status" /> <span>Prices haven't been updated for over 7 days</span>`;
+          pricesLastUpdatedContent += ` <img src="${pathPrefix}img/warning.svg" class="icon status" /> <span>Prices haven't been updated for over 7 days</span>`;
         }
 
         let pricesLastUpdateSuccessfulContent =
           'Not available (price update job might still be running)';
         if (data.pricesLastUpdateSuccessful === true) {
-          pricesLastUpdateSuccessfulContent = `<img src="/img/check.svg" class="icon status" alt="Success" />`;
+          pricesLastUpdateSuccessfulContent = `<img src="${pathPrefix}img/check.svg" class="icon status" alt="Success" />`;
         } else if (data.pricesLastUpdateSuccessful === false) {
-          pricesLastUpdateSuccessfulContent = `<img src="/img/cross.svg" class="icon status" alt="Failed" />`;
+          pricesLastUpdateSuccessfulContent = `<img src="${pathPrefix}img/cross.svg" class="icon status" alt="Failed" />`;
         }
 
         document.getElementById('stats-results').innerHTML = `
