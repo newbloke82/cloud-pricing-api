@@ -7,13 +7,14 @@ import path from 'path';
 import { Logger } from 'pino';
 import config from './config';
 import ApolloLogger from './utils/apolloLogger';
-import resolvers from './resolvers';
+import getResolvers from './resolvers';
 import typeDefs from './typeDefs';
 import health from './health';
 import auth from './auth';
 import events from './events';
 import stats from './stats';
 import home from './home';
+import { Price } from './db/types';
 
 type ApplicationOptions = {
   apolloConfigOverrides?: ApolloServerExpressConfig;
@@ -21,6 +22,7 @@ type ApplicationOptions = {
   disableStats?: boolean;
   disableAuth?: boolean;
   logger?: Logger;
+  convertPrices?(prices: Price[]): Promise<void>;
 };
 
 interface ResponseError extends Error {
@@ -90,7 +92,7 @@ async function createApp(opts: ApplicationOptions = {}): Promise<Application> {
   const apolloConfig: ApolloServerExpressConfig = {
     schema: makeExecutableSchema({
       typeDefs,
-      resolvers,
+      resolvers: getResolvers(opts),
     }),
     introspection: true,
     plugins: [

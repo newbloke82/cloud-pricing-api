@@ -38,7 +38,11 @@ function strToRegex(str: string): RegExp {
   return new RegExp(pattern, options);
 }
 
-const resolvers: IResolvers = {
+interface ResolverOptions {
+  convertPrices?(prices: Price[]): Promise<void>;
+}
+
+const getResolvers = (ops: ResolverOptions): IResolvers => ({
   Query: {
     products: async (
       _parent: unknown,
@@ -61,6 +65,10 @@ const resolvers: IResolvers = {
         .find(product.prices, transformFilter(args.filter))
         .all() as Price[];
       await convertCurrencies(prices);
+      if (ops.convertPrices) {
+        await ops.convertPrices(prices);
+      }
+
       return prices;
     },
   },
@@ -73,7 +81,7 @@ const resolvers: IResolvers = {
           currency.convert('USD', code, Number(price.USD)),
       ])
     ),
-};
+});
 
 function transformFilter(filter: Filter): MongoDbFilter {
   const transformed: MongoDbFilter = {};
@@ -110,4 +118,4 @@ async function convertCurrencies(prices: Price[]) {
   }
 }
 
-export default resolvers;
+export default getResolvers;
