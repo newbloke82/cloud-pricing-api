@@ -14,22 +14,24 @@ import auth from './auth';
 import events from './events';
 import stats from './stats';
 import home from './home';
-import { Price } from './db/types';
+import { Product } from './db/types';
 
-type ApplicationOptions = {
+export type ApplicationOptions<TContext> = {
   apolloConfigOverrides?: ApolloServerExpressConfig;
   disableRequestLogging?: boolean;
   disableStats?: boolean;
   disableAuth?: boolean;
   logger?: Logger;
-  convertPrices?(prices: Price[]): Promise<void>;
+  convertProducts?(context: TContext, products: Product[]): Promise<Product[]>;
 };
 
 interface ResponseError extends Error {
   status?: number;
 }
 
-async function createApp(opts: ApplicationOptions = {}): Promise<Application> {
+async function createApp<TContext>(
+  opts: ApplicationOptions<TContext> = {}
+): Promise<Application> {
   const app = express();
 
   const logger = opts.logger || config.logger;
@@ -92,7 +94,7 @@ async function createApp(opts: ApplicationOptions = {}): Promise<Application> {
   const apolloConfig: ApolloServerExpressConfig = {
     schema: makeExecutableSchema({
       typeDefs,
-      resolvers: getResolvers(opts),
+      resolvers: getResolvers<TContext>(opts),
     }),
     introspection: true,
     plugins: [

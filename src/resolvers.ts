@@ -3,6 +3,7 @@ import mingo from 'mingo';
 import { Price, Product } from './db/types';
 import currency, { CURRENCY_CODES } from './utils/currency';
 import { findProducts } from './db/query';
+import { ApplicationOptions } from './app';
 
 const productLimit = 1000;
 
@@ -38,18 +39,26 @@ function strToRegex(str: string): RegExp {
   return new RegExp(pattern, options);
 }
 
-interface ResolverOptions {
-  convertPrices?(prices: Price[]): Promise<void>;
-}
-
-const getResolvers = (ops: ResolverOptions): IResolvers => ({
+const getResolvers = <TContext>(
+  ops: ApplicationOptions<TContext>
+): IResolvers => ({
   Query: {
     products: async (
       _parent: unknown,
-      args: ProductsArgs
+      args: ProductsArgs,
+      context: TContext
     ): Promise<Product[]> => {
       const { attributeFilters, ...otherFilters } = args.filter;
-      return findProducts(otherFilters, attributeFilters, productLimit);
+      const products = await findProducts(
+        otherFilters,
+        attributeFilters,
+        productLimit
+      );
+      if (ops.convertProducts) {
+        return ops.convertProducts(context, products);
+      }
+
+      return products;
     },
   },
   Product: {
@@ -65,9 +74,6 @@ const getResolvers = (ops: ResolverOptions): IResolvers => ({
         .find(product.prices, transformFilter(args.filter))
         .all() as Price[];
       await convertCurrencies(prices);
-      if (ops.convertPrices) {
-        await ops.convertPrices(prices);
-      }
 
       return prices;
     },
