@@ -7,10 +7,23 @@ import { generatePriceHash, generateProductHash } from '../db/helpers';
 import { upsertProducts } from '../db/upsert';
 import { findProducts } from '../db/query';
 
+// TODO: refactor to use compute.machineTypes.list()
 const machineTypeDescriptionLookups: {
   [key: string]: { [key: string]: string };
 } = {
+  a2: {
+    cpu: 'A2 Instance Core',
+    memory: 'A2 Instance Ram',
+  },
   c2: {
+    cpu: 'Compute optimized Core',
+    memory: 'Compute optimized Ram',
+  },
+  c2d: {
+    cpu: 'C2D AMD Instance Core',
+    memory: 'C2D AMD Instance Ram',
+  },
+  c3: {
     cpu: 'Compute optimized Core',
     memory: 'Compute optimized Ram',
   },
@@ -30,6 +43,14 @@ const machineTypeDescriptionLookups: {
     // some have "Preemptible Memory-optimized Ram"
     memory: 'Memory-optimized (Instance )?Ram',
   },
+  m2: {
+    cpu: 'Memory-optimized Instance Core',
+    memory: 'Memory-optimized (Instance )?Ram',
+  },
+  m3: {
+    cpu: 'Memory-optimized Instance Core',
+    memory: 'Memory-optimized (Instance )?Ram',
+  },
   n1: {
     cpu: 'N1 Predefined Instance Core',
     memory: 'N1 Predefined Instance Ram',
@@ -42,9 +63,14 @@ const machineTypeDescriptionLookups: {
     cpu: 'N2D AMD Instance Core',
     memory: 'N2D AMD Instance Ram',
   },
-  a2: {
-    cpu: 'A2 Instance Core',
-    memory: 'A2 Instance Ram',
+  // T2A is not available in all regions
+  t2a: {
+    cpu: 'T2A ARM Instance Core',
+    memory: 'T2A ARM Instance Ram',
+  },
+  t2d: {
+    cpu: 'T2D AMD Instance Core',
+    memory: 'T2D AMD Instance Ram',
   },
 };
 
