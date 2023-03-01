@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios';
+import fetch, { Response } from 'node-fetch';
 import ProgressBar from 'progress';
 import fs from 'fs';
 import yargs from 'yargs';
@@ -13,7 +13,7 @@ async function run() {
       out: { type: 'string', default: './data/products/products.csv.gz' },
     }).argv;
 
-  let latestResp: AxiosResponse<{ downloadUrl: string }>;
+  let latestResp: Response;
 
   if (!config.infracostAPIKey) {
     config.logger.error('Please set INFRACOST_API_KEY.');
@@ -24,7 +24,7 @@ async function run() {
   }
 
   try {
-    latestResp = await axios.get(
+    latestResp = await fetch(
       `${config.infracostPricingApiEndpoint}/data-download/latest`,
       {
         headers: {
@@ -33,62 +33,78 @@ async function run() {
         },
       }
     );
-  } catch (e) {
-    if (e.response?.status === 403) {
+    if (!latestResp.ok) {
+      const body = latestResp.body.read().toString();
+
       config.logger.error(
-        'You do not have permission to download data. Please set a valid INFRACOST_API_KEY.'
+        `There was an error downloading data: HTTP ${latestResp.status}: ${body}`
       );
-      config.logger.error(
-        'A new key can be obtained by installing the infracost CLI and running "infracost auth login".  The key is usually saved in ~/.config/infracost/credentials.yml'
-      );
-    } else {
-      config.logger.error(`There was an error downloading data: ${e.message}`);
+
+      try {
+        const errorData = (await JSON.parse(body)) as { error: string };
+        if (
+          latestResp.status === 403 &&
+          errorData.error === 'Invalid API key'
+        ) {
+          config.logger.error(
+            'You do not have permission to download data. Please set a valid INFRACOST_API_KEY.'
+          );
+          config.logger.error(
+            'A new key can be obtained by installing the infracost CLI and running "infracost auth login".  The key is usually saved in ~/.config/infracost/credentials.yml'
+          );
+        }
+      } catch (e) {
+        // eslint-disable no-empty
+        // We don't care if the body is not valid JSON since we log it above anyway
+      }
+
+      process.exit(1);
     }
+  } catch (e) {
+    config.logger.error(`There was an error downloading data: ${e}`);
     process.exit(1);
   }
 
-  const { downloadUrl } = latestResp.data;
+  const { downloadUrl } = (await latestResp.json()) as { downloadUrl: string };
   config.logger.debug(`Downloading dump from ${downloadUrl}`);
 
   const writer = fs.createWriteStream(argv.out);
-  await axios({
-    method: 'get',
-    url: downloadUrl,
-    responseType: 'stream',
-  }).then(
-    (resp) =>
-      new Promise((resolve, reject) => {
-        const progressBar = new ProgressBar(
-          `-> downloading ${argv.out} [:bar] :percent (:etas remaining)`,
-          {
-            width: 40,
-            complete: '=',
-            incomplete: ' ',
-            renderThrottle: 500,
-            total: parseInt(resp.headers['content-length'] || '0', 10),
-          }
-        );
 
-        resp.data.on('data', (chunk: { length: number }) =>
-          progressBar.tick(chunk.length)
-        );
+  await new Promise((resolve, reject) => {
+    fetch(downloadUrl, {
+      method: 'get',
+    }).then((resp) => {
+      const progressBar = new ProgressBar(
+        `-> downloading ${argv.out} [:bar] :percent (:etas remaining)`,
+        {
+          width: 40,
+          complete: '=',
+          incomplete: ' ',
+          renderThrottle: 500,
+          total: parseInt(resp.headers.get('content-length') || '0', 10),
+        }
+      );
 
-        resp.data.pipe(writer);
+      resp.body.on('data', (chunk: { length: number }) =>
+        progressBar.tick(chunk.length)
+      );
 
-        let error: Error | null = null;
-        writer.on('error', (err) => {
-          error = err;
-          writer.close();
-          reject(err);
-        });
+      resp.body.pipe(writer);
 
-        writer.on('close', () => {
-          if (!error) {
-            resolve(true);
-          }
-        });
-      })
-  );
+      let error: Error | null = null;
+      writer.on('error', (err) => {
+        error = err;
+        writer.close();
+        reject(err);
+      });
+
+      writer.on('close', () => {
+        if (!error) {
+          resolve(true);
+        }
+      });
+    });
+  });
 }
 
 config.logger.info('Starting: downloading DB data');
