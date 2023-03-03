@@ -40,7 +40,7 @@ The pricing DB dump is downloaded from Infracost's API as that simplifies the ta
 
 ## Deployment
 
-It should take around 15 mins to deploy the Cloud Pricing API. Two deployment methods are supported:
+Two deployment methods are supported:
 1. If you have a Kubernetes cluster, we recommend using [our Helm Chart](https://github.com/infracost/helm-charts/tree/master/charts/cloud-pricing-api).
 2. If you prefer to deploy in a VM, we recommend using [Docker compose](#docker-compose).
 
@@ -136,7 +136,7 @@ See [the Infracost docs](https://www.infracost.io/docs/cloud_pricing_api/self_ho
 
 ## Troubleshooting
 
-Please see [this section](https://www.infracost.io/docs/cloud_pricing_api/self_hosted/#troubleshooting) and join our [community Slack channel](https://www.infracost.io/community-chat), we'll help you very quickly 😄
+Please see [this section](https://www.infracost.io/docs/cloud_pricing_api/self_hosted/#troubleshooting).
 
 ## Contributing
 
