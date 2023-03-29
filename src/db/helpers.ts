@@ -19,6 +19,7 @@ export function generateProductHash(product: Product): string {
 }
 
 export function generatePriceHash(product: Product, price: Price): string {
+  let hashExtra = '';
   let hashFields: string[];
   // keep AWS price hashes the same so Infracost tests don't break
   if (product.vendorName === 'aws') {
@@ -29,6 +30,21 @@ export function generatePriceHash(product: Product, price: Price): string {
       'termPurchaseOption',
       'termOfferingClass',
     ];
+
+    // As of March 2023, AWS seems to be sending some overlapping Cloudfront
+    // regionless products from the US and China pricing endpoints.  We need
+    // to make sure the pricehash accounts for this so the prices can be
+    // properly merged, otherwise the CNY prices will clobbed the USD prices.
+    //
+    // We also don't want to modify existing USD prices if we can avoid it.
+    // So this complicates the hashing function, but it is probably worth it:
+    if (
+      product.region === null &&
+      price.USD === undefined &&
+      price.CNY !== undefined
+    ) {
+      hashExtra = '-cny';
+    }
   } else {
     hashFields = [
       'purchaseOption',
@@ -47,7 +63,7 @@ export function generatePriceHash(product: Product, price: Price): string {
     .createHash('md5')
     .update(hashableValues.join('-'))
     .digest('hex');
-  return `${product.productHash}-${hash}`;
+  return `${product.productHash}-${hash}${hashExtra}`;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
