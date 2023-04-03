@@ -1,5 +1,6 @@
 import { IResolvers } from '@graphql-tools/utils';
 import mingo from 'mingo';
+import _ from 'lodash';
 import { Price, Product } from './db/types';
 import currency, { CURRENCY_CODES } from './utils/currency';
 import { findProducts } from './db/query';
@@ -70,9 +71,11 @@ const getResolvers = <TContext>(
         value: a[1],
       })),
     prices: async (product: Product, args: PricesArgs): Promise<Price[]> => {
-      const prices = mingo
+      let prices = mingo
         .find(product.prices, transformFilter(args.filter))
         .all() as Price[];
+      prices = mergeCny(product, prices);
+
       await convertCurrencies(prices);
 
       return prices;
@@ -112,6 +115,47 @@ function transformFilter(filter: Filter): MongoDbFilter {
     transformed[key][op] = value;
   });
   return transformed;
+}
+
+// The AWS & AWS China prices come from separate pricing APIS.  For region-less services, the products
+// overlap and the price hashes can collide.  Ideally the scraper would detect this and merge them into
+// a single price with the USD & CNY prices, but for now we merge them as needed on the fly here.
+function mergeCny(product: Product, prices: Price[]): Price[] {
+  if (product.vendorName !== 'aws' || product.region !== null) {
+    return prices;
+  }
+
+  // split out the CNY specific prices
+  const [cnyPrices, otherPrices] = _.partition(prices, (p) =>
+    p.priceHash.endsWith('-cny')
+  );
+
+  const groupedCny = _.groupBy(
+    cnyPrices,
+    (p) => `${p.priceHash}-${p.startUsageAmount}-${p.endUsageAmount}`
+  );
+
+  for (const price of otherPrices) {
+    const cnyKey = `${price.priceHash}-cny-${price.startUsageAmount}-${price.endUsageAmount}`;
+    const grouped = groupedCny[cnyKey];
+    if (
+      grouped?.length === 1 &&
+      grouped[0].USD == null &&
+      grouped[0].CNY != null
+    ) {
+      // there is one matching CNY price, merge the CNY price into this one.
+      price.CNY = grouped[0].CNY;
+      delete groupedCny[cnyKey];
+    }
+  }
+
+  for (const grouped of Object.values(groupedCny)) {
+    for (const remainingPrice of grouped) {
+      otherPrices.push(remainingPrice);
+    }
+  }
+
+  return otherPrices;
 }
 
 async function convertCurrencies(prices: Price[]) {
