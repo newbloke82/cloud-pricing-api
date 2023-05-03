@@ -70,8 +70,8 @@ const machineTypeDescriptionLookups: {
   },
   // T2A is not available in all regions
   t2a: {
-    cpu: 'T2A ARM Instance Core',
-    memory: 'T2A ARM Instance Ram',
+    cpu: 'T2A Arm Instance Core',
+    memory: 'T2A Arm Instance Ram',
   },
   t2d: {
     cpu: 'T2D AMD Instance Core',
