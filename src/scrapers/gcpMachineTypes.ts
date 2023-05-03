@@ -37,6 +37,11 @@ const machineTypeDescriptionLookups: {
   g1: {
     total: 'Small Instance with 1 VCPU',
   },
+  // G2 is not available in all regions
+  g2: {
+    cpu: 'G2 Instance Core',
+    memory: 'G2 Instance Ram',
+  },
   m1: {
     cpu: 'Memory-optimized Instance Core',
     // Some regions have "Preemptible Memory-optimized Instance Ram"
