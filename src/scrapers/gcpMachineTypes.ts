@@ -113,14 +113,22 @@ async function scrape(): Promise<void> {
     const regionName = region.name || '';
     const regionZones = zones.filter((z) => z.startsWith(regionName));
 
-    const machineTypeResp = await compute.machineTypes.list({
-      project: config.gcpProject,
-      zone: regionZones[0],
-    });
+    const machineTypeMap: { [key: string]: compute_v1.Schema$MachineType } = {};
 
-    for (const machineType of machineTypeResp.data.items || []) {
-      const name = machineType.name || '';
+    for (const zone of regionZones) {
+      const machineTypeResp = await compute.machineTypes.list({
+        project: config.gcpProject,
+        zone,
+      });
 
+      for (const machineType of machineTypeResp.data.items || []) {
+        if (machineType.name) {
+          machineTypeMap[machineType.name] ||= machineType;
+        }
+      }
+    }
+
+    for (const [name, machineType] of Object.entries(machineTypeMap)) {
       config.logger.info(`Adding machine type ${name} for ${regionName}`);
 
       const product: Product = {
