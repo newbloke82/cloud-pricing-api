@@ -67,7 +67,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.21.5",
-    "@babel/node": "^7.19.1",
+    "@babel/node": "^7.22.1",
     "@types/glob": "^8.0.0",
     "@types/lodash": "^4.14.191",
     "@types/node": "^18.11.8",
