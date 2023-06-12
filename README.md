@@ -95,7 +95,7 @@ See [our Helm Chart](https://github.com/infracost/helm-charts/tree/master/charts
 
 6. Run `docker-compose up api`. This will start the Cloud Pricing API.
 
-6. Prices can be kept up-to-date by running the update job once a week, for example from cron:
+6. Prices can be kept up-to-date by running the update job once a week as shown below. Do not run this job more than once a week as cloud prices do not change that often; doing so increases costs for us (we offer this as a free service for the community).
 
     ```sh
     # Add a weekly cron job to update the pricing data. The cron entry should look something like:
