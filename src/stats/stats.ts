@@ -105,3 +105,23 @@ export async function fetchStats(): Promise<Stats | null> {
     ? (camelKeys(response.rows[0]) as Stats)
     : null;
 }
+
+export async function fetchLastSuccessfullyUpdatedAt(): Promise<Date | null> {
+  const pool = await config.pg();
+
+  const sql = format(
+    `
+    SELECT
+      stats.prices_last_successfully_updated_at
+    FROM %I as stats
+    LIMIT 1
+    `,
+    config.statsTableName
+  );
+
+  const response = await pool.query(sql);
+
+  return response.rows.length > 0
+    ? (camelKeys(response.rows[0]) as Stats).pricesLastSuccessfullyUpdatedAt
+    : null;
+}
