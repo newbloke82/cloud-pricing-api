@@ -45,6 +45,7 @@ const regionMapping: { [key: string]: string } = {
   'Asia Pacific (Melbourne)': 'ap-southeast-4',
   'Asia Pacific (Mumbai)': 'ap-south-1',
   'Asia Pacific (Hyderabad)': 'ap-south-2',
+  'Israel (Tel Aviv)': 'il-central-1',
   'Middle East (Bahrain)': 'me-south-1',
   'Middle East (UAE)': 'me-central-1',
   'South America (Sao Paulo)': 'sa-east-1',
