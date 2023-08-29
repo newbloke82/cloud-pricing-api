@@ -1,5 +1,6 @@
 import { IResolvers } from '@graphql-tools/utils';
 import mingo from 'mingo';
+import { GraphQLError } from 'graphql';
 import _ from 'lodash';
 import { Price, Product } from './db/types';
 import currency, { CURRENCY_CODES } from './utils/currency';
@@ -50,6 +51,28 @@ const getResolvers = <TContext>(
       context: TContext
     ): Promise<Product[]> => {
       const { attributeFilters, ...otherFilters } = args.filter;
+
+      // When querying AmazonEC2, require specific filters that will use the db indexes efficiently.
+      if (otherFilters.service === "AmazonEC2") {
+        if (!otherFilters.region || !otherFilters.productFamily) {
+          throw new GraphQLError('"region" and "productFamily" filters are required when "service"="AmazonEC2"', {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+            },
+          });
+        }
+
+        if (otherFilters.productFamily.startsWith("Compute Instance") &&
+            !_.some(attributeFilters, f => f.key === 'instanceType') )
+        {
+          throw new GraphQLError('"instanceType" attribute filter is required when "service"="AmazonEC2" and "productFamily"="Compute Instance*"', {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+            },
+          });
+        }
+      }
+
       const products = await findProducts(
         otherFilters,
         attributeFilters,
