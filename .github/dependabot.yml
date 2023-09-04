@@ -17,3 +17,8 @@ updates:
       - infracost/engineering
     labels:
       - dependencies
+    groups:
+      production-dependencies:
+        dependency-type: production
+      development-dependencies:
+        dependency-type: development
