@@ -87,7 +87,7 @@ async function loadFile(client: PoolClient, filename: string): Promise<void> {
 
   const gunzip = zlib.createGunzip().on('error', (e) => {
     config.logger.error(
-      `There was an error decompressing the file: ${e.message}`
+      `There was an error decompressing the file: ${e}`
     );
     config.logger.error(
       `The latest data files can be downloaded with "npm run-scripts data:download"`

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, isAxiosError } from 'axios';
 import glob from 'glob';
 import config from '../config';
 import { Product, Price } from '../db/types';
@@ -63,7 +63,9 @@ async function downloadAll(): Promise<void> {
       config.logger.error(
         `Skipping service ${service.displayName} due to error ${e}`
       );
-      config.logger.error(e.stack);
+      if (e instanceof Error) {
+        config.logger.error(e.stack);
+      }
     }
   }
 }
@@ -111,7 +113,7 @@ async function downloadService(service: ServiceJson): Promise<void> {
         success = true;
       } catch (err) {
         // Too many requests, sleep and retry
-        if (err.response.status === 429) {
+        if (isAxiosError(err) && err.response?.status === 429) {
           config.logger.info(
             'Too many requests, sleeping for 30s and retrying'
           );
@@ -157,7 +159,9 @@ async function loadAll(): Promise<void> {
       await processFile(filename);
     } catch (e) {
       config.logger.error(`Skipping file ${filename} due to error ${e}`);
-      config.logger.error(e.stack);
+      if (e instanceof Error) {
+        config.logger.error(e.stack);
+      }
     }
   }
 }

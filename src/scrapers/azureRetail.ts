@@ -91,7 +91,9 @@ async function loadAll(): Promise<void> {
       await processFile(filename);
     } catch (e) {
       config.logger.error(`Skipping file ${filename} due to error ${e}`);
-      config.logger.error(e.stack);
+      if (e instanceof Error) {
+        config.logger.error(e.stack);
+      }
     }
   }
 }

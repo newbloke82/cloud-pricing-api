@@ -16,7 +16,7 @@ async function run(): Promise<void> {
       break;
     } catch (e) {
       config.logger.error(
-        `Waiting for PostgreSQL to become available: ${e.message}`
+        `Waiting for PostgreSQL to become available: ${e}`
       );
       await new Promise((resolve) => {
         setTimeout(resolve, backOffSecs * 1000);

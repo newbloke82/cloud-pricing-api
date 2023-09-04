@@ -36,7 +36,7 @@ export default class ApolloLogger implements ApolloServerPlugin {
 
     let q = '';
     try {
-      q = prettier.format(requestContext.request.query || '', {
+      q = await prettier.format(requestContext.request.query || '', {
         parser: 'graphql',
       });
     } catch (e) {
