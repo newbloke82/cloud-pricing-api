@@ -53,23 +53,40 @@ const getResolvers = <TContext>(
       const { attributeFilters, ...otherFilters } = args.filter;
 
       // When querying AmazonEC2, require specific filters that will use the db indexes efficiently.
-      if (otherFilters.service === "AmazonEC2") {
+      if (otherFilters.service === 'AmazonEC2') {
         if (!otherFilters.region || !otherFilters.productFamily) {
-          throw new GraphQLError('"region" and "productFamily" filters are required when "service"="AmazonEC2"', {
-            extensions: {
-              code: 'BAD_USER_INPUT',
-            },
-          });
+          throw new GraphQLError(
+            '"region" and "productFamily" filters are required when "service"="AmazonEC2"',
+            {
+              extensions: {
+                code: 'BAD_USER_INPUT',
+              },
+            }
+          );
         }
 
-        if (otherFilters.productFamily.startsWith("Compute Instance") &&
-            !_.some(attributeFilters, f => f.key === 'instanceType') )
-        {
-          throw new GraphQLError('"instanceType" attribute filter is required when "service"="AmazonEC2" and "productFamily"="Compute Instance*"', {
-            extensions: {
-              code: 'BAD_USER_INPUT',
-            },
-          });
+        let instanceType: AttributeFilter | undefined;
+        for (const filter of attributeFilters) {
+          if (filter.key === 'instanceType') {
+            instanceType = filter;
+          }
+        }
+
+        const isCompute =
+          otherFilters.productFamily.startsWith('Compute Instance');
+        if (isCompute && !instanceType) {
+          throw new GraphQLError(
+            '"instanceType" attribute filter is required when "service"="AmazonEC2" and "productFamily"="Compute Instance*"',
+            {
+              extensions: {
+                code: 'BAD_USER_INPUT',
+              },
+            }
+          );
+        }
+
+        if (isCompute && !instanceType?.value && !instanceType?.value_regex) {
+          return [];
         }
       }
 
