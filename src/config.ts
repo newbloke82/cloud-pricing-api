@@ -30,6 +30,10 @@ async function pg(): Promise<Pool> {
       port: Number(process.env.POSTGRES_PORT) || 5432,
       host: process.env.POSTGRES_HOST || 'localhost',
       max: Number(process.env.POSTGRES_MAX_CLIENTS) || 10,
+      ssl: {
+        rejectUnauthorized: true,
+        ca: fs.readFileSync('/etc/ssl/certs/ca-certificates.crt').toString(),
+      },
     };
 
     if (process.env.POSTGRES_URI) {

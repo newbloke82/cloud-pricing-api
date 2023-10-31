@@ -10,7 +10,9 @@ RUN npm run build
 
 FROM node:16.13-alpine3.12 as release
 
-RUN apk add --no-cache bash curl postgresql-client
+RUN apk add --no-cache bash ca-certificates curl postgresql-client && rm -rf /var/cache/apk/*
+RUN curl "https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem" --output /tmp/global-bundle.pem
+RUN cat /tmp/global-bundle.pem >> /etc/ssl/certs/ca-certificates.crt
 
 WORKDIR /usr/src/app
 RUN mkdir -p data/products
