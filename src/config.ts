@@ -21,7 +21,7 @@ createPaths.forEach((path) => {
 });
 
 let pgPool: Pool;
-async function pg(): Promise<Pool> {
+export async function pg(): Promise<Pool> {
   if (!pgPool) {
     let poolConfig: PoolConfig = {
       user: process.env.POSTGRES_USER || 'postgres',
