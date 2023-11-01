@@ -21,7 +21,7 @@ type ProductWithPriceMap = {
   prices: { [priceHash: string]: Price[] };
 };
 
-function flattenPrices(p: ProductWithPriceMap): Product {
+export function flattenPrices(p: ProductWithPriceMap): Product {
   return { ...p, prices: Object.values(p.prices).flat() };
 }
 
@@ -29,7 +29,8 @@ function flattenPrices(p: ProductWithPriceMap): Product {
 export async function findProducts(
   filters: { [key: string]: string | string[] },
   attributeFilters: AttributeFilter[],
-  limit?: number
+  limit?: number,
+  table = config.productTableName
 ): Promise<Product[]> {
   const pool = await config.pg();
 
@@ -44,10 +45,7 @@ export async function findProducts(
     });
   }
 
-  let sql = format(
-    `SELECT * FROM %I WHERE ${where.join(' AND ')}`,
-    config.productTableName
-  );
+  let sql = format(`SELECT * FROM %I WHERE ${where.join(' AND ')}`, table);
   if (limit !== undefined) {
     sql = format(`${sql} LIMIT %L`, limit);
   }

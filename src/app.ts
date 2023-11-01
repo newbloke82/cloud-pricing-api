@@ -22,7 +22,9 @@ export type ApplicationOptions<TContext> = {
   disableStats?: boolean;
   disableAuth?: boolean;
   logger?: Logger;
-  convertProducts?(context: TContext, products: Product[]): Promise<Product[]>;
+  convertProducts?: {
+    (context: TContext, products: Product[]): Promise<Product[]>;
+  }[];
 };
 
 interface ResponseError extends Error {

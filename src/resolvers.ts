@@ -90,13 +90,14 @@ const getResolvers = <TContext>(
         }
       }
 
-      const products = await findProducts(
+      let products = await findProducts(
         otherFilters,
         attributeFilters,
         productLimit
       );
-      if (ops.convertProducts) {
-        return ops.convertProducts(context, products);
+
+      for (const convertProduct of ops.convertProducts ?? []) {
+        products = await convertProduct(context, products);
       }
 
       return products;
