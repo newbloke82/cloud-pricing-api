@@ -78,6 +78,7 @@ async function run() {
 
   await new Promise((resolve, reject) => {
     fetch(downloadUrl, {
+      agent,
       method: 'get',
     }).then((resp) => {
       const progressBar = new ProgressBar(
