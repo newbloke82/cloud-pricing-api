@@ -4,6 +4,10 @@ import fs from 'fs';
 import yargs from 'yargs';
 import config from '../config';
 
+const proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
+
+const agent = proxy ? new HttpsProxyAgent(proxy) : undefined;
+
 async function run() {
   const argv = await yargs
     .usage(
@@ -27,6 +31,7 @@ async function run() {
     latestResp = await fetch(
       `${config.infracostPricingApiEndpoint}/data-download/latest`,
       {
+        agent, 
         headers: {
           'X-Api-Key': config.infracostAPIKey || '',
           'X-Cloud-Pricing-Api-Version': process.env.npm_package_version || '',

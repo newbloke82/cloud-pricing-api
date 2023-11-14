@@ -50,6 +50,7 @@
     "glob": "^8.0.3",
     "googleapis": "^110.0.0",
     "graphql": "^16.6.0",
+    "https-proxy-agent": "^7.0.2",
     "lodash": "^4.17.21",
     "mingo": "^6.1.2",
     "node-cache": "^5.1.2",
