@@ -3,6 +3,7 @@ import ProgressBar from 'progress';
 import fs from 'fs';
 import yargs from 'yargs';
 import config from '../config';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 const proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
 
